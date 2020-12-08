@@ -3,6 +3,10 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include <iostream>
+#include "ShaderProgram.h"
+#include "ShaderStorageBuffer.h"
+#include "VertexBuffer.h"
+#include "Texture.h"
 
 class GLApp
 {

@@ -15,7 +15,7 @@ public:
 		return Samples;
 	}
 
-private:
+protected:
 	HammersleySampler() = default;
 
 private:

@@ -27,8 +27,30 @@ class VertexBuffer
 	GLuint m_VBO = 0u;
 	GLuint m_VAO = 0u;
 public:
+	static std::shared_ptr<VertexBuffer> create(unsigned int size, void* data, const VertexLayout& layout, GLuint usage = GL_STATIC_DRAW)
+	{
+		return std::make_shared<VertexBuffer>(size, data, layout, usage);
+	}
+	~VertexBuffer() 
+	{
+		glDeleteBuffers(1, &m_VAO);
+		glDeleteBuffers(1, &m_VBO);
+	}
+
+	void bind() const
+	{
+		glBindVertexArray(m_VAO);
+	}
+
+	void unbind() const
+	{
+		glBindVertexArray(0);
+	}
+
+//should be protected
+public:
 	VertexBuffer() = default;
-	VertexBuffer(unsigned int size, void* data, const VertexLayout& layout, GLuint usage = GL_STATIC_DRAW)
+	VertexBuffer(unsigned int size, void* data, const VertexLayout & layout, GLuint usage = GL_STATIC_DRAW)
 	{
 		glGenVertexArrays(1, &m_VAO);
 		glGenBuffers(1, &m_VBO);
@@ -49,21 +71,5 @@ public:
 
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	~VertexBuffer() 
-	{
-		glDeleteBuffers(1, &m_VAO);
-		glDeleteBuffers(1, &m_VBO);
-	}
-
-	void bind() const
-	{
-		glBindVertexArray(m_VAO);
-	}
-
-	void unbind() const
-	{
-		glBindVertexArray(0);
 	}
 };

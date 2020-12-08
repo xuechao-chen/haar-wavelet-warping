@@ -58,13 +58,23 @@ private:
     }
 };
 
-class Program
+class ShaderProgram
 {
 public:
     unsigned int m_ID;
 
-    Program() = default;
-    Program(const char* vertexPath, const char* fragmentPath)
+    static std::shared_ptr<ShaderProgram> createRenderProgram(const char* vertexPath, const char* fragmentPath)
+    {
+        return std::make_shared<ShaderProgram>(vertexPath, fragmentPath);
+    }
+
+    static std::shared_ptr<ShaderProgram> createComputeProgram(const char* computePath)
+    {
+        return std::make_shared<ShaderProgram>(computePath);
+    }
+
+    ShaderProgram() = default;
+    ShaderProgram(const char* vertexPath, const char* fragmentPath)
     {
         m_ID = glCreateProgram();
         Shader vertexShader(vertexPath, GL_VERTEX_SHADER);
@@ -75,7 +85,7 @@ public:
         checkLinkErrors();
     }
 
-    Program(const char* computePath)
+    ShaderProgram(const char* computePath)
     {
         m_ID = glCreateProgram();
         Shader computeShader(computePath, GL_COMPUTE_SHADER);

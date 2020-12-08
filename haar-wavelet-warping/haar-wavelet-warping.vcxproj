@@ -77,6 +77,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(OPENGL)/include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(OPENGL)/lib/x86;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -113,6 +115,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glfw3-vc140.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -152,21 +155,26 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ShaderStorageBuffer.h" />
+    <ClInclude Include="SimpleApp.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="GLApp.h" />
-    <ClInclude Include="GLUtil.h" />
     <ClInclude Include="Haar2D.h" />
     <ClInclude Include="HammersleySampler.h" />
     <ClInclude Include="HierarchyWarping.h" />
-    <ClInclude Include="Program.h" />
+    <ClInclude Include="ShaderProgram.h" />
+    <ClInclude Include="WarpingAppOnCPU.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="E:\SDK\OpenGL\include\glad\src\glad.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="point.frag" />
+    <None Include="point.vert" />
     <None Include="quad.frag" />
     <None Include="quad.vert" />
     <None Include="warping.comp" />

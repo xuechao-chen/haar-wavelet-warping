@@ -30,13 +30,7 @@
     <ClInclude Include="Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Program.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="GLApp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="GLUtil.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="VertexBuffer.h">
@@ -48,12 +42,27 @@
     <ClInclude Include="Texture.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WarpingAppOnCPU.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleApp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderProgram.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="E:\SDK\OpenGL\include\glad\src\glad.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stb_image.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,6 +74,12 @@
       <Filter>Shader</Filter>
     </None>
     <None Include="warping.comp">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="point.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="point.frag">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

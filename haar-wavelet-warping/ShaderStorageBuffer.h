@@ -6,13 +6,9 @@ class ShaderStorageBuffer
 {
 	GLuint m_ID = 0u;
 public:
-	ShaderStorageBuffer() = default;
-
-	ShaderStorageBuffer(unsigned int size, void* data, unsigned int index, GLuint usage = GL_DYNAMIC_DRAW)
+	static std::shared_ptr<ShaderStorageBuffer> create(unsigned int size, void* data, unsigned int index, GLuint usage = GL_DYNAMIC_DRAW)
 	{
-		glGenBuffers(1, &m_ID);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, m_ID);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, usage);
+		return std::make_shared<ShaderStorageBuffer>(size, data, index, usage);
 	}
 
 	~ShaderStorageBuffer()
@@ -28,5 +24,17 @@ public:
 	void unbind() const
 	{
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+
+//protected:
+public:
+	ShaderStorageBuffer() = default;
+
+	ShaderStorageBuffer(unsigned int size, void* data, unsigned int index, GLuint usage = GL_DYNAMIC_DRAW)
+	{
+		glGenBuffers(1, &m_ID);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, m_ID);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, usage);
 	}
 };
