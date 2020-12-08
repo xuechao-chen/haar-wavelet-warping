@@ -2,8 +2,7 @@
 
 int main()
 {
-    std::shared_ptr<GLApp> pApp = std::make_shared<WarpingAppOnCPU>(512u, 512u, "WarpingAppOnCPU");
-    pApp->run();
+    LAUNCH_APPLICATION(512, 512, WarpingAppOnCPU);
 
     return 0;
 }

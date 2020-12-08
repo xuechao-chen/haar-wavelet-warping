@@ -76,3 +76,7 @@ private:
 			glfwSetWindowShouldClose(window, true);
 	}
 };
+
+#define LAUNCH_APPLICATION(width, height, app)                                             \
+		std::shared_ptr<GLApp> pApp = std::make_shared<app>(width, height, "Application"); \
+		pApp->run();
