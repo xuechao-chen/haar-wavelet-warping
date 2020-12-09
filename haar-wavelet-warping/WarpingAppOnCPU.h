@@ -33,7 +33,6 @@ protected:
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //TODO: 重构用法
         m_pQuadProgram->use();
         m_pQuadBuffer->bind();
         m_pTex->bind(0);

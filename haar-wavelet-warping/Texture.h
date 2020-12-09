@@ -8,6 +8,9 @@ class Texture2D : public ReferenceCountedObject
 {
 	unsigned int m_ID = 0;
 	unsigned int m_BindPoint = 0;
+	int m_Width = 0;
+	int m_Height = 0;
+	GLenum m_Format = GL_RGB;
 public:
 	static std::shared_ptr<Texture2D> create(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, bool mipmap)
 	{
@@ -37,11 +40,26 @@ public:
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	int    width()  const { return m_Width; }
+	int    height() const { return m_Height; }
+	GLenum format() const { return m_Format; }
+
+	void getTexImage(std::vector<unsigned char>& texData)
+	{
+		if (m_Format == GL_RED) texData.resize(m_Width*m_Height);
+		if (m_Format == GL_RGB) texData.resize(m_Width*m_Height*3);
+		if (m_Format == GL_RGBA) texData.resize(m_Width*m_Height*4);
+
+		glBindTexture(GL_TEXTURE_2D, m_ID);
+		glGetTexImage(GL_TEXTURE_2D, 0, m_Format, GL_UNSIGNED_BYTE, &texData[0]);
+	}
+
 	~Texture2D() { glDeleteTextures(1, &m_ID); }
 
 protected:
 	Texture2D() = default;
 	Texture2D(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, bool mipmap)
+		: m_Width(width), m_Height(height)
 	{
 		glGenTextures(1, &m_ID);
 		glBindTexture(GL_TEXTURE_2D, m_ID);
@@ -67,20 +85,23 @@ protected:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-		int Width, Height, Channels;
+		int Channels;
 		stbi_set_flip_vertically_on_load(true);
-		unsigned char* pImageData = stbi_load(path, &Width, &Height, &Channels, 0);
+		unsigned char* pImageData = stbi_load(path, &m_Width, &m_Height, &Channels, 0);
 
 		switch (Channels)
 		{
 		case 1:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, Width, Height, 0, GL_RED, GL_UNSIGNED_BYTE, pImageData);
+			m_Format = GL_RED;
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_Width, m_Height, 0, GL_RED, GL_UNSIGNED_BYTE, pImageData);
 			break;
 		case 3:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, pImageData);
+			m_Format = GL_RGB;
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Width, m_Height, 0, GL_RGB, GL_UNSIGNED_BYTE, pImageData);
 			break;
 		case 4:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pImageData);
+			m_Format = GL_RGBA;
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pImageData);
 			break;
 		default:
 			break;
