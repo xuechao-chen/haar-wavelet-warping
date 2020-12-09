@@ -1,17 +1,28 @@
 #pragma once
-
 #include <glad/include/glad/glad.h>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "ReferenceCountedObject.h"
 
-class Shader
+class Shader : public ReferenceCountedObject
 {
 public:
     unsigned int m_ID;
     GLuint m_Type;
 
+    static std::shared_ptr<Shader> create(const char* path, GLuint type)
+    {
+        return createShared<Shader>(path, type);
+    }
+
+    ~Shader()
+    {
+        glDeleteShader(m_ID);
+    }
+
+protected:
     Shader(const char* path, GLuint type) : m_Type(type)
     {
         std::string Code;
@@ -38,11 +49,6 @@ public:
         checkCompileErrors(type);
     }
 
-    ~Shader()
-    {
-        glDeleteShader(m_ID);
-    }
-
 private:
     void checkCompileErrors(GLuint shaderType)
     {
@@ -58,40 +64,19 @@ private:
     }
 };
 
-class ShaderProgram
+class ShaderProgram : public ReferenceCountedObject
 {
 public:
     unsigned int m_ID;
 
     static std::shared_ptr<ShaderProgram> create(const char* vertexPath, const char* fragmentPath)
     {
-        return std::make_shared<ShaderProgram>(vertexPath, fragmentPath);
+        return createShared<ShaderProgram>(vertexPath, fragmentPath);
     }
 
     static std::shared_ptr<ShaderProgram> create(const char* computePath)
     {
-        return std::make_shared<ShaderProgram>(computePath);
-    }
-
-    ShaderProgram() = default;
-    ShaderProgram(const char* vertexPath, const char* fragmentPath)
-    {
-        m_ID = glCreateProgram();
-        Shader vertexShader(vertexPath, GL_VERTEX_SHADER);
-        Shader fragmentShader(fragmentPath, GL_FRAGMENT_SHADER);
-        glAttachShader(m_ID, vertexShader.m_ID);
-        glAttachShader(m_ID, fragmentShader.m_ID);
-        glLinkProgram(m_ID);
-        checkLinkErrors();
-    }
-
-    ShaderProgram(const char* computePath)
-    {
-        m_ID = glCreateProgram();
-        Shader computeShader(computePath, GL_COMPUTE_SHADER);
-        glAttachShader(m_ID, computeShader.m_ID);
-        glLinkProgram(m_ID);
-        checkLinkErrors();
+        return createShared<ShaderProgram>(computePath);
     }
 
     void use()
@@ -108,10 +93,32 @@ public:
     {
         glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value);
     }
-    
+
     void setFloat(const std::string& name, float value) const
     {
         glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value);
+    }
+
+protected:
+    ShaderProgram() = default;
+    ShaderProgram(const char* vertexPath, const char* fragmentPath)
+    {
+        m_ID = glCreateProgram();
+        auto VertexShader = Shader::create(vertexPath, GL_VERTEX_SHADER);
+        auto FragmentShader = Shader::create(fragmentPath, GL_FRAGMENT_SHADER);
+        glAttachShader(m_ID, VertexShader->m_ID);
+        glAttachShader(m_ID, FragmentShader->m_ID);
+        glLinkProgram(m_ID);
+        checkLinkErrors();
+    }
+
+    ShaderProgram(const char* computePath)
+    {
+        m_ID = glCreateProgram();
+        auto ComputeShader = Shader::create(computePath, GL_COMPUTE_SHADER);
+        glAttachShader(m_ID, ComputeShader->m_ID);
+        glLinkProgram(m_ID);
+        checkLinkErrors();
     }
 
 private:

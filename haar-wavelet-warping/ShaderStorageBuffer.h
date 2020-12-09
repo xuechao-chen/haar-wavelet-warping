@@ -1,14 +1,15 @@
 #pragma once
 #include <glad/include/glad/glad.h>
 #include <vector>
+#include "ReferenceCountedObject.h"
 
-class ShaderStorageBuffer
+class ShaderStorageBuffer : public ReferenceCountedObject
 {
 	GLuint m_ID = 0u;
 public:
 	static std::shared_ptr<ShaderStorageBuffer> create(unsigned int size, void* data, unsigned int index, GLuint usage = GL_DYNAMIC_DRAW)
 	{
-		return std::make_shared<ShaderStorageBuffer>(size, data, index, usage);
+		return createShared<ShaderStorageBuffer>(size, data, index, usage);
 	}
 
 	~ShaderStorageBuffer()
@@ -26,11 +27,8 @@ public:
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
-
-//protected:
-public:
+protected:
 	ShaderStorageBuffer() = default;
-
 	ShaderStorageBuffer(unsigned int size, void* data, unsigned int index, GLuint usage = GL_DYNAMIC_DRAW)
 	{
 		glGenBuffers(1, &m_ID);

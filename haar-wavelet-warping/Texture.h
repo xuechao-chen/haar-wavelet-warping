@@ -2,20 +2,21 @@
 #include <glad/include/glad/glad.h>
 #include <memory>
 #include "stb_image.h"
+#include "ReferenceCountedObject.h"
 
-class Texture2D
+class Texture2D : public ReferenceCountedObject
 {
 	unsigned int m_ID = 0;
 	unsigned int m_BindPoint = 0;
 public:
 	static std::shared_ptr<Texture2D> create(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, bool mipmap)
 	{
-		return std::make_shared<Texture2D>(width, height, internalFormat, format, mipmap);
+		return createShared<Texture2D>(width, height, internalFormat, format, mipmap);
 	}
 
 	static std::shared_ptr<Texture2D> create(const char* path)
 	{
-		return std::make_shared<Texture2D>(path);
+		return createShared<Texture2D>(path);
 	}
 
 	static std::shared_ptr<Texture2D> create()
@@ -38,8 +39,7 @@ public:
 
 	~Texture2D() { glDeleteTextures(1, &m_ID); }
 
-//protected:
-public:
+protected:
 	Texture2D() = default;
 	Texture2D(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, bool mipmap)
 	{
@@ -93,21 +93,20 @@ public:
 	}
 };
 
-class Image2D
+class Image2D : public ReferenceCountedObject
 {
 	unsigned int m_ID;
 public:
 	static std::shared_ptr<Image2D> createEmpty(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, unsigned int bindPoint) 
 	{
-		return std::make_shared<Image2D>(width, height, internalFormat, format, bindPoint);
+		return createShared<Image2D>(width, height, internalFormat, format, bindPoint);
 	}
 	~Image2D()
 	{
 		glDeleteTextures(1, &m_ID);
 	}
 
-//protected:
-public:
+protected:
 	Image2D() = default;
 	Image2D(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, unsigned int bindPoint)
 	{

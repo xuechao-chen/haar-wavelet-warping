@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "ReferenceCountedObject.h"
 #include "stb_image.h"
 
 struct FinerCoeff
@@ -11,7 +12,7 @@ struct FinerCoeff
     double a, b, c, d;
 };
 
-class HaarSlice
+class HaarSlice : public ReferenceCountedObject
 {
 	uint16_t m_Width;
 	uint16_t m_Height;
@@ -20,7 +21,7 @@ class HaarSlice
 public:
 	static std::shared_ptr<HaarSlice> create(uint16_t width, uint16_t height, double* data)
 	{
-		return std::make_shared<HaarSlice>(width, height, data);
+		return createShared<HaarSlice>(width, height, data);
 	}
 
 	~HaarSlice()
@@ -41,8 +42,7 @@ public:
 	uint16_t width() const { return m_Width; }
 	uint16_t height() const { return m_Height; }
 
-//protected:
-public:
+protected:
 	HaarSlice(uint16_t width, uint16_t height, double* data) : m_Width(width), m_Height(height)
 	{
 		int Size = width * height;
@@ -54,48 +54,14 @@ public:
 	}
 };
 
-class Haar2D
+class Haar2D : public ReferenceCountedObject
 {
 	std::vector<std::shared_ptr<HaarSlice>> m_pHaarMipmap;
 
 public:
 	static std::shared_ptr<Haar2D> create(const char* imagePath)
 	{
-		return std::make_shared<Haar2D>(imagePath);
-	}
-
-	Haar2D(const char* imagePath)
-	{
-		int Width, Height, Channels;
-		unsigned char* pImageData = stbi_load(imagePath, &Width, &Height, &Channels, 0);
-		double* pSliceData = new double[Width*Height];
-
-		for (int i = 0; i < Width * Height; i++)
-		{
-			switch (Channels)
-			{
-				case 1:
-				{
-					pSliceData[i] = pImageData[i];
-					break;
-				}
-				case 3:
-				{
-					pSliceData[i] = 0.3 * pImageData[i * 3 + 0] + 0.59 * pImageData[i * 3 + 1] + 0.11 * pImageData[i * 3 + 2];
-					break;
-				}
-				default:
-				{
-					std::cout << "Only support image format(R, RGB)" << std::endl;
-					exit(-1);
-					break;
-				}
-			}
-		}
-		
-		auto pSlice = HaarSlice::create(Width, Height, pSliceData);
-		generateMipmap(pSlice);
-		stbi_image_free(pImageData);
+		return createShared<Haar2D>(imagePath);
 	}
 
 	uint16_t getSliceNum() const { return (uint16_t)m_pHaarMipmap.size(); }
@@ -110,6 +76,41 @@ public:
 		auto d = m_pHaarMipmap[l+1]->get(u*2+1,v*2+1);
 
 		return { a,b,c,d };
+	}
+
+protected:
+	Haar2D(const char* imagePath)
+	{
+		int Width, Height, Channels;
+		unsigned char* pImageData = stbi_load(imagePath, &Width, &Height, &Channels, 0);
+		double* pSliceData = new double[Width * Height];
+
+		for (int i = 0; i < Width * Height; i++)
+		{
+			switch (Channels)
+			{
+			case 1:
+			{
+				pSliceData[i] = pImageData[i];
+				break;
+			}
+			case 3:
+			{
+				pSliceData[i] = 0.3 * pImageData[i * 3 + 0] + 0.59 * pImageData[i * 3 + 1] + 0.11 * pImageData[i * 3 + 2];
+				break;
+			}
+			default:
+			{
+				std::cout << "Only support image format(R, RGB)" << std::endl;
+				exit(-1);
+				break;
+			}
+			}
+		}
+
+		auto pSlice = HaarSlice::create(Width, Height, pSliceData);
+		generateMipmap(pSlice);
+		stbi_image_free(pImageData);
 	}
 
 private:

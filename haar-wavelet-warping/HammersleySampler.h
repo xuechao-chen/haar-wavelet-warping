@@ -15,9 +15,6 @@ public:
 		return Samples;
 	}
 
-protected:
-	HammersleySampler() = default;
-
 private:
 	static double __radicalInverse(uint32_t bits)
 	{

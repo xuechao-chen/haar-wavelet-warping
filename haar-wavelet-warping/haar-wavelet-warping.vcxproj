@@ -154,6 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ReferenceCountedObject.h" />
     <ClInclude Include="ShaderStorageBuffer.h" />
     <ClInclude Include="SimpleApp.h" />
     <ClInclude Include="stb_image.h" />

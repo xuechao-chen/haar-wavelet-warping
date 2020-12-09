@@ -78,9 +78,6 @@ public:
 		}
 	}
 
-protected:
-	HierarchyWarping() = default;
-
 private:
 	static void warpByMatrix(const Region2D& region2d, const FinerCoeff& coeff, std::vector<Point2D>& samples)
 	{
@@ -89,6 +86,7 @@ private:
 		auto RatioX2 = coeff.c / (coeff.c + coeff.d);
 
 		Region2D RegionA(region2d.startPos, region2d.range * Point2D(RatioX1, RatioY));
+		Region2D RegionB(region2d.startPos+Point2D(RegionA.range.x, 0), region2d.range * Point2D(RatioX1, RatioY));
 
 		WarpingMatrix A;
 		WarpingMatrix B;

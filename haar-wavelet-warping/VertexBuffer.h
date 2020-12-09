@@ -1,6 +1,7 @@
 #pragma once
 #include <glad/include/glad/glad.h>
 #include <vector>
+#include "ReferenceCountedObject.h"
 
 struct VertexAttr
 {
@@ -22,14 +23,14 @@ struct VertexLayout
 	std::vector<VertexAttr> attrs;
 };
 
-class VertexBuffer
+class VertexBuffer : public ReferenceCountedObject
 {
 	GLuint m_VBO = 0u;
 	GLuint m_VAO = 0u;
 public:
 	static std::shared_ptr<VertexBuffer> create(unsigned int size, void* data, const VertexLayout& layout, GLuint usage = GL_STATIC_DRAW)
 	{
-		return std::make_shared<VertexBuffer>(size, data, layout, usage);
+		return createShared<VertexBuffer>(size, data, layout, usage);
 	}
 	~VertexBuffer() 
 	{
@@ -47,8 +48,7 @@ public:
 		glBindVertexArray(0);
 	}
 
-//should be protected
-public:
+protected:
 	VertexBuffer() = default;
 	VertexBuffer(unsigned int size, void* data, const VertexLayout & layout, GLuint usage = GL_STATIC_DRAW)
 	{
