@@ -17,7 +17,7 @@ class GLApp
 public:
 	GLApp(unsigned int width, unsigned int height, const std::string& name) : m_Width(width), m_Height(height), m_Name(name) {}
 
-	~GLApp() 
+	virtual ~GLApp() 
 	{ 
 		glfwTerminate();
 	}
@@ -34,7 +34,6 @@ public:
 
 protected:
 	virtual void onInit() {}
-
 	virtual void onRender() {}
 
 private:
@@ -45,7 +44,7 @@ private:
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-		m_pWindow = glfwCreateWindow(m_Width, m_Height, "LearnOpenGL", NULL, NULL);
+		m_pWindow = glfwCreateWindow(m_Width, m_Height, m_Name.c_str(), NULL, NULL);
 		if (m_pWindow == NULL)
 		{
 			std::cout << "Failed to create GLFW window" << std::endl;

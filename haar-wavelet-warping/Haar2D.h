@@ -1,11 +1,14 @@
 #pragma once
 #include <vector>
-#include <iostream>
 #include "stb_image.h"
 
 struct FinerCoeff
 {
-	double a, b, c, d;
+    /********
+    * a | b *
+    * c | d *
+    *********/
+    double a, b, c, d;
 };
 
 class HaarSlice
@@ -101,10 +104,10 @@ public:
 
 	FinerCoeff getFinerCoeff(uint16_t l, uint16_t u, uint16_t v) const
 	{
-		auto a = m_pHaarMipmap[l + 1]->get(u * 2, v * 2);
-		auto b = m_pHaarMipmap[l + 1]->get(u * 2 + 1, v * 2);
-		auto c = m_pHaarMipmap[l + 1]->get(u * 2, v * 2 + 1);
-		auto d = m_pHaarMipmap[l + 1]->get(u * 2 + 1, v * 2 + 1);
+		auto a = m_pHaarMipmap[l+1]->get(u*2,  v*2);
+		auto b = m_pHaarMipmap[l+1]->get(u*2+1,v*2);
+		auto c = m_pHaarMipmap[l+1]->get(u*2,  v*2+1);
+		auto d = m_pHaarMipmap[l+1]->get(u*2+1,v*2+1);
 
 		return { a,b,c,d };
 	}

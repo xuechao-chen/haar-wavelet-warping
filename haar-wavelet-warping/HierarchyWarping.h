@@ -2,6 +2,47 @@
 #include "Haar2D.h"
 #include "HammersleySampler.h"
 
+struct WarpingMatrix
+{
+	double m00, m01=0, m02, m10=0, m11, m12, m20=0, m21=0, m22=1;
+
+	WarpingMatrix() {}
+	WarpingMatrix(double baseX, double baseY, double ratioX, double ratioY)
+	{
+		m00 = 0.5 / ratioX;
+		m02 = (1 - m00) * baseX;
+		m11 = 0.5 / ratioY;
+		m12 = (1 - m11) * ratioY;
+	}
+
+	WarpingMatrix& operator*(const WarpingMatrix& other) const
+	{
+		WarpingMatrix Matrix;
+
+		Matrix.m00 = m00 * other.m00 + m01 * other.m01 + m02 * other.m02;
+		Matrix.m01 = m00 * other.m10 + m01 * other.m11 + m02 * other.m12;
+		Matrix.m02 = m00 * other.m20 + m01 * other.m21 + m02 * other.m22;
+
+		Matrix.m10 = m10 * other.m00 + m11 * other.m01 + m12 * other.m02;
+		Matrix.m11 = m10 * other.m10 + m11 * other.m11 + m12 * other.m12;
+		Matrix.m12 = m10 * other.m20 + m11 * other.m21 + m12 * other.m22;
+
+		return Matrix;
+	}
+
+	Point2D& operator*(const Point2D& other) const
+	{
+		Point2D Point;
+
+		auto x = Point.x;
+		auto y = Point.y;
+		Point.x = m00 * x + m01 * y + m02;
+		Point.y = m10 * x + m11 * y + m21;
+
+		return Point;
+	}
+};
+
 class HierarchyWarping
 {
 public:
@@ -27,7 +68,7 @@ public:
 					auto RatioY = (Coeff.a + Coeff.b) / (Coeff.a + Coeff.b + Coeff.c + Coeff.d);
 					auto RatioX1 = Coeff.a / (Coeff.a + Coeff.b);
 					auto RatioX2 = Coeff.c / (Coeff.c + Coeff.d);
-
+					
 					//TODO: Matrix style
 					warpY({ {u * InvW, v * InvH}, {InvW, InvH} }, RatioY, samples);
 					warpX({ {u * InvW, v * InvH}, {InvW, InvH * 0.5} }, RatioX1, samples);
@@ -41,14 +82,28 @@ protected:
 	HierarchyWarping() = default;
 
 private:
-	static void warpX(const Region2D& range2d, double ratio, std::vector<Point2D>& samples)
+	static void warpByMatrix(const Region2D& region2d, const FinerCoeff& coeff, std::vector<Point2D>& samples)
+	{
+		auto RatioY = (coeff.a + coeff.b) / (coeff.a + coeff.b + coeff.c + coeff.d);
+		auto RatioX1 = coeff.a / (coeff.a + coeff.b);
+		auto RatioX2 = coeff.c / (coeff.c + coeff.d);
+
+		Region2D RegionA(region2d.startPos, region2d.range * Point2D(RatioX1, RatioY));
+
+		WarpingMatrix A;
+		WarpingMatrix B;
+		WarpingMatrix C;
+		WarpingMatrix D;
+		//TODO
+	}
+	static void warpX(const Region2D& region2d, double ratio, std::vector<Point2D>& samples)
 	{
 		for (auto& sample : samples)
 		{
-			if (!range2d.contain(sample)) continue;
+			if (!region2d.contain(sample)) continue;
 
-			auto x1 = range2d.x1();
-			auto x2 = range2d.x2();
+			auto x1 = region2d.x1();
+			auto x2 = region2d.x2();
 
 			if (sample.x < x1 + (x2-x1)*ratio)
 			{
@@ -61,14 +116,14 @@ private:
 		}
 	}
 
-	static void warpY(const Region2D& range2d, double ratio, std::vector<Point2D>& samples)
+	static void warpY(const Region2D& region2d, double ratio, std::vector<Point2D>& samples)
 	{
 		for (auto& sample : samples)
 		{
-			if (!range2d.contain(sample)) continue;
+			if (!region2d.contain(sample)) continue;
 
-			auto y1 = range2d.y1();
-			auto y2 = range2d.y2();
+			auto y1 = region2d.y1();
+			auto y2 = region2d.y2();
 
 			if (sample.y < y1 + (y2-y1)*ratio)
 			{

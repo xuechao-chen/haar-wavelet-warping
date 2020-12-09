@@ -5,6 +5,7 @@ struct Point2D
 	double x;
 	double y;
 
+	Point2D() : Point2D(0,0) {}
 	Point2D(double x, double y) : x(x), y(y) {}
 
 	bool operator>(const Point2D& other) const
@@ -21,12 +22,21 @@ struct Point2D
 	{
 		return Point2D(x + other.x, y + other.y);
 	}
+
+	Point2D operator*(const Point2D& other) const
+	{
+		return Point2D(x*other.x, y*other.y);
+	}
+
 };
 
 struct Region2D
 {
 	Point2D startPos;
 	Point2D range;
+
+	Region2D() {}
+	Region2D(const Point2D& startPos, const Point2D& range) : startPos(startPos), range(range) {}
 
 	double x1() const { return startPos.x; }
 	double x2() const { return startPos.x + range.x; }

@@ -63,12 +63,12 @@ class ShaderProgram
 public:
     unsigned int m_ID;
 
-    static std::shared_ptr<ShaderProgram> createRenderProgram(const char* vertexPath, const char* fragmentPath)
+    static std::shared_ptr<ShaderProgram> create(const char* vertexPath, const char* fragmentPath)
     {
         return std::make_shared<ShaderProgram>(vertexPath, fragmentPath);
     }
 
-    static std::shared_ptr<ShaderProgram> createComputeProgram(const char* computePath)
+    static std::shared_ptr<ShaderProgram> create(const char* computePath)
     {
         return std::make_shared<ShaderProgram>(computePath);
     }
