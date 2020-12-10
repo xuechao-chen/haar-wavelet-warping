@@ -167,6 +167,7 @@
     <ClInclude Include="HierarchyWarping.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="WarpingAppOnCPU.h" />
+    <ClInclude Include="WarpingAppOnGPU1.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="E:\SDK\OpenGL\include\glad\src\glad.c" />
@@ -178,7 +179,10 @@
     <None Include="point.vert" />
     <None Include="quad.frag" />
     <None Include="quad.vert" />
+    <None Include="quad_tex2d_array.frag" />
+    <None Include="quad_tex2d_array.vert" />
     <None Include="warping.comp" />
+    <None Include="warping_on_gpu_1.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
