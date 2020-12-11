@@ -1,0 +1,83 @@
+#version 430
+
+layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
+layout(std430, binding=1) buffer WarpingPointStruct
+{
+	vec2 WarpingPoints[65536];
+};
+
+uniform int totalLayer;
+uniform int curLayer;
+uniform sampler2DArray haar2DTex;
+
+bool inRegion(in vec2 point, in vec2 regionBase, in float stride)
+{
+	return (
+		point.x >= regionBase.x &&
+		point.y >= regionBase.y &&
+		point.x <= regionBase.x + stride &&
+		point.y <= regionBase.y + stride
+	);
+}
+
+float grayscale(vec3 rgb)
+{
+	return 0.3*rgb.r+0.59*rgb.g+0.11*rgb.b;
+}
+
+void main()
+{
+//当前warping的点索引
+	uint pointIdx = gl_WorkGroupID.x*256+gl_LocalInvocationID.x;
+	
+//计算当前warping的区域
+	vec2 texCoord = vec2(gl_WorkGroupID.y, gl_WorkGroupID.z);
+	vec2 regionBase =  texCoord / (1 << curLayer);
+	float regionStride = 1.0 / (1 << curLayer);
+
+//计算纹理坐标以及三个warping轴的比例
+	ivec2 finerTexCoordBase = ivec2(gl_WorkGroupID.y, gl_WorkGroupID.z)*2;
+	int layer = totalLayer-curLayer-2;
+	vec4 coeff = vec4(
+		grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(0,0), gl_WorkGroupID.x), layer).rgb),
+		grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(0,1), gl_WorkGroupID.x), layer).rgb),
+		grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(1,0), gl_WorkGroupID.x), layer).rgb),
+		grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(1,1), gl_WorkGroupID.x), layer).rgb)
+	);
+
+	float ratioY = (coeff.x+coeff.y) / (coeff.x+coeff.y + coeff.z+coeff.w);
+	float ratioX1 = coeff.x / (coeff.x+coeff.y);
+	float ratioX2 = coeff.z / (coeff.z+coeff.w);
+
+//warping
+	if (inRegion(WarpingPoints[pointIdx], regionBase, regionStride))
+	{
+	//warp y-axis
+		if (WarpingPoints[pointIdx].y - regionBase.y < regionStride*ratioY)
+		{
+			WarpingPoints[pointIdx].y = WarpingPoints[pointIdx].y * (0.5 / ratioY) + regionBase.y * (1 - 0.5/ratioY);
+		//warp x-axis
+			if (WarpingPoints[pointIdx].x - regionBase.x < regionStride*ratioX1)
+			{
+				WarpingPoints[pointIdx].x = WarpingPoints[pointIdx].x * (0.5 / ratioX1) + regionBase.x * (1 - 0.5/ratioX1);
+			}
+			else
+			{
+				WarpingPoints[pointIdx].x = WarpingPoints[pointIdx].x * (0.5 / (1-ratioX1)) + (regionBase.x+regionStride) * (1 - 0.5/(1-ratioX1));
+			}
+		}
+		else
+		{
+			WarpingPoints[pointIdx].y = WarpingPoints[pointIdx].y * (0.5 / (1-ratioY)) + (regionBase.y+regionStride) * (1 - 0.5/(1-ratioY));
+		//warp x-axis
+			if (WarpingPoints[pointIdx].x - regionBase.x < regionStride*ratioX2)
+			{
+				WarpingPoints[pointIdx].x = WarpingPoints[pointIdx].x * (0.5 / ratioX2) + regionBase.x * (1 - 0.5/ratioX2);
+			}
+			else
+			{
+				WarpingPoints[pointIdx].x = WarpingPoints[pointIdx].x * (0.5 / (1-ratioX2)) + (regionBase.x+regionStride) * (1 - 0.5/(1-ratioX2));
+			}
+		}
+	}
+}

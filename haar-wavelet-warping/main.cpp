@@ -1,10 +1,8 @@
-#include "WarpingAppOnCPU.h"
-#include "WarpingAppOnGPU1.h"
+#include "WarpingAppOnGPUByLayer.h"
 
 int main()
 {
-    //LAUNCH_APPLICATION(512, 512, WarpingAppOnCPU);
-    LAUNCH_APPLICATION(256,256,WarpingAppOnGPU1);
+    LAUNCH_APPLICATION(256,256,WarpingAppOnGPUByLayer);
 
     return 0;
 }

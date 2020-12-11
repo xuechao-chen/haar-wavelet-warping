@@ -57,7 +57,7 @@
     <ClInclude Include="ReferenceCountedObject.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="WarpingAppOnGPU1.h">
+    <ClInclude Include="WarpingAppOnGPUByLayer.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -88,13 +88,19 @@
     <None Include="point.frag">
       <Filter>Shader</Filter>
     </None>
-    <None Include="warping_on_gpu_1.comp">
-      <Filter>Shader</Filter>
-    </None>
     <None Include="quad_tex2d_array.vert">
       <Filter>Shader</Filter>
     </None>
     <None Include="quad_tex2d_array.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="init_warping_point.comp">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="warping_on_gpu_by_layer.comp">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="visualize_warping_point.comp">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

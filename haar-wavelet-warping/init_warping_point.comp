@@ -1,0 +1,17 @@
+#version 430
+
+layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
+
+layout(std430, binding=0) buffer SamplePointStruct
+{
+	vec2 SamplePoints[256];
+};
+layout(std430, binding=1) buffer WarpingPointStruct
+{
+	vec2 WarpingPoints[65536];
+};
+
+void main()
+{
+	WarpingPoints[gl_WorkGroupID.x*256+gl_LocalInvocationID.x] = SamplePoints[gl_LocalInvocationID.x];
+}

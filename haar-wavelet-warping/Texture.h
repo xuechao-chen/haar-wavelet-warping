@@ -173,6 +173,7 @@ protected:
 		glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, internalFormat,width, height, layer);
 		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, width, height, layer, format, GL_UNSIGNED_BYTE, nullptr);
 
+		glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 	}
 	Texture2DArray(std::vector<const char*> pathArray, unsigned width, unsigned height)
@@ -201,8 +202,10 @@ protected:
 			stbi_image_free(pData);
 		}
 
-		glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB16F, width, height, pathArray.size());
+		int Level = log2(m_Width)+1;
+		glTexStorage3D(GL_TEXTURE_2D_ARRAY, Level, GL_RGB16F, width, height, pathArray.size());
 		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, width, height, pathArray.size(), GL_RGB, GL_UNSIGNED_BYTE, pImageData);
+		glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
 		delete[] pImageData;
