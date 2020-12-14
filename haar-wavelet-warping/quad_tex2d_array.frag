@@ -1,6 +1,7 @@
 #version 430
 
 uniform sampler2DArray srcTex;
+layout(r32f, binding=0) uniform image2D warpingTex;
 in vec2 texCoord;
 out vec4 color;
 
@@ -15,5 +16,7 @@ void main() {
 	int layer = ix+iy*16;
 
 	vec3 rgb = texture(srcTex, vec3(coord, layer)).rgb;
-	color = vec4(rgb, 1.0);
+	vec3 warping_rgb = imageLoad(warpingTex, ivec2(gl_FragCoord.xy)).rgb;
+	
+	color = vec4(mix(rgb, warping_rgb, 0.5), 1.0);
 }
