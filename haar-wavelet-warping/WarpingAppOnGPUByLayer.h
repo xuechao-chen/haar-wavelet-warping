@@ -40,19 +40,6 @@ protected:
 
 	void onRender() override
 	{
-		/*
-		+ compute shader
-		+ 创建8*8*N Texture2DArray + Mipmap
-		+ 创建8*8*N SSBO
-		+ 传参64个UniformSamples
-		+ Copy UniformSamples to each SSBO
-		+ Warping 若干次
-		*
-		+ vert/frag shader
-		+ 把Texture2DArray展成全屏渲染出来
-		* 把SSBO展成全屏渲染出来
-		*/
-
 		glClearColor(1.0,1.0,1.0,1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
