@@ -29,7 +29,7 @@ protected:
 		std::vector<const char*> PathArray;
 		for (size_t i = 0; i < 256; i++)
 		{
-			PathArray.push_back("tex3.jpg");
+			PathArray.push_back("tex4.jpg");
 		}
 		m_pTexArray = Texture2DArray::create(PathArray, 16, 16);
 		m_pQuadBuffer = createQuadBuffer();
