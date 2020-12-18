@@ -23,7 +23,7 @@ protected:
 	{
 		m_pQuadProgram = ShaderProgram::create("quad_tex2d_array.vert", "quad_tex2d_array.frag");
 		m_pInitWarpingProgram = ShaderProgram::create("init_warping_point.comp");
-		m_pWarpingProgram = ShaderProgram::create("warping_on_gpu_by_layer.comp");
+		m_pWarpingProgram = ShaderProgram::create("warping_by_layer.comp");
 		m_pVisualizeWarpingProgram = ShaderProgram::create("visualize_warping_point.comp");
 
 		std::vector<const char*> PathArray;

@@ -184,7 +184,7 @@
     <None Include="quad_tex2d_array.vert" />
     <None Include="visualize_warping_point.comp" />
     <None Include="warping.comp" />
-    <None Include="warping_on_gpu_by_layer.comp" />
+    <None Include="warping_by_layer.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

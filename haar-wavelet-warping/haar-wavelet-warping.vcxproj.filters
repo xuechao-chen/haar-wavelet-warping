@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Shader">
+    <Filter Include="shader">
       <UniqueIdentifier>{be577f32-3cb2-405c-b35a-5a760e95736b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -74,34 +74,34 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="quad.frag">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="quad.vert">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="warping.comp">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="point.vert">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="point.frag">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="quad_tex2d_array.vert">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="quad_tex2d_array.frag">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="init_warping_point.comp">
-      <Filter>Shader</Filter>
-    </None>
-    <None Include="warping_on_gpu_by_layer.comp">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
     </None>
     <None Include="visualize_warping_point.comp">
-      <Filter>Shader</Filter>
+      <Filter>shader</Filter>
+    </None>
+    <None Include="warping_by_layer.comp">
+      <Filter>shader</Filter>
     </None>
   </ItemGroup>
 </Project>
