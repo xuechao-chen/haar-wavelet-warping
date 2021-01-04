@@ -9,8 +9,10 @@ class WarpingAppOnGPUByAccumulate : public GLApp
 	std::shared_ptr<ShaderProgram> m_pQuadProgram;
 	std::shared_ptr<ShaderProgram> m_pInitWarpingProgram;
 	std::shared_ptr<ShaderProgram> m_pGetWarpingRegionProgram;
-	std::shared_ptr<ShaderProgram> m_pGetWarpingRegionOfSize_1_Program;
-	std::shared_ptr<ShaderProgram> m_pGetWarpingRegionOfSize_4_Program;
+	std::shared_ptr<ShaderProgram> m_pGetWarpingRegionOfSize_2x2_Program;
+	std::shared_ptr<ShaderProgram> m_pGetWarpingRegionOfSize_4x4_Program;
+	std::shared_ptr<ShaderProgram> m_pGetWarpingRegionOfSize_8x8_Program;
+	std::shared_ptr<ShaderProgram> m_pGetWarpingRegionOfSize_16x16_Program;
 	std::shared_ptr<ShaderProgram> m_pWarpingProgram;
 	std::shared_ptr<ShaderProgram> m_pVisualizeWarpingProgram;
 	std::shared_ptr<Texture2DArray> m_pTexArray;
@@ -29,8 +31,10 @@ protected:
 		m_pQuadProgram = ShaderProgram::create("quad_tex2d_array.vert", "quad_tex2d_array.frag");
 		m_pInitWarpingProgram = ShaderProgram::create("init_warping_point.comp");
 		m_pGetWarpingRegionProgram= ShaderProgram::create("get_warp_region_coefficient.comp");
-		m_pGetWarpingRegionOfSize_1_Program = ShaderProgram::create("get_warp_region_coefficient(texSize=1).comp");
-		m_pGetWarpingRegionOfSize_4_Program = ShaderProgram::create("get_warp_region_coefficient(texSize=4).comp");
+		m_pGetWarpingRegionOfSize_2x2_Program = ShaderProgram::create("get_coefficient_mipmap_2x2.comp");
+		m_pGetWarpingRegionOfSize_4x4_Program = ShaderProgram::create("get_coefficient_mipmap_4x4.comp");
+		m_pGetWarpingRegionOfSize_8x8_Program = ShaderProgram::create("get_coefficient_mipmap_8x8.comp");
+		m_pGetWarpingRegionOfSize_16x16_Program = ShaderProgram::create("get_coefficient_mipmap_16x16.comp");
 		m_pWarpingProgram = ShaderProgram::create("warp_on_gpu_by_accumulate.comp");
 		m_pVisualizeWarpingProgram = ShaderProgram::create("visualize_warping_point.comp");
 
@@ -43,8 +47,7 @@ protected:
 		m_pQuadBuffer = createQuadBuffer();
 		m_pUniformSampleBuffer = createUniformSampleBuffer(m_NumSample, 0);
 		m_pWarpingSampleBuffer = ShaderStorageBuffer::create(sizeof(float) * m_NumSample * m_NumProbe * 2, nullptr, 1);
-		m_pWarpingRegionBuffer = ShaderStorageBuffer::create(sizeof(float) * m_NumSample * m_NumProbe * 8, nullptr, 2);
-		m_pCopyWarpingRegionBuffer = ShaderStorageBuffer::create(sizeof(float) * m_NumSample * m_NumProbe * 8, nullptr, 3);
+		m_pWarpingRegionBuffer = ShaderStorageBuffer::create(sizeof(float) * 340 * m_NumProbe * 8, nullptr, 2);
 		m_pImage2D = Image2D::createEmpty(256, 256, GL_R32F, GL_RED, 0);
 	}
 
@@ -69,38 +72,44 @@ protected:
 		m_pInitWarpingProgram->use();
 		glDispatchCompute(256,1,1);
 
-		//m_pGetWarpingRegionProgram->use();
 		auto TotalLayer = std::log2(m_pTexArray->width()) + 1;
 		for (size_t i = 0; i < TotalLayer-1; i++)
 		{
 			auto TexSize = 1 << i;
 			if (TexSize == 1)
 			{
-				m_pGetWarpingRegionOfSize_1_Program->use();
+				m_pGetWarpingRegionOfSize_2x2_Program->use();
 				m_pTexArray->bind(0);
-				m_pGetWarpingRegionOfSize_1_Program->setInt("totalLayer", TotalLayer);
-				m_pGetWarpingRegionOfSize_1_Program->setInt("curLayer", i);
+				m_pGetWarpingRegionOfSize_2x2_Program->setInt("totalLayer", TotalLayer);
+				m_pGetWarpingRegionOfSize_2x2_Program->setInt("curLayer", i);
 			}
-			else if (TexSize == 4)
+			else if (TexSize == 2)
 			{
-				m_pGetWarpingRegionOfSize_4_Program->use();
+				m_pGetWarpingRegionOfSize_4x4_Program->use();
 				m_pTexArray->bind(0);
-				m_pGetWarpingRegionOfSize_4_Program->setInt("totalLayer", TotalLayer);
-				m_pGetWarpingRegionOfSize_4_Program->setInt("curLayer", i);
+				m_pGetWarpingRegionOfSize_4x4_Program->setInt("totalLayer", TotalLayer);
+				m_pGetWarpingRegionOfSize_4x4_Program->setInt("curLayer", i);
+			}
+			else if(TexSize == 4)
+			{
+				m_pGetWarpingRegionOfSize_8x8_Program->use();
+				m_pTexArray->bind(0);
+				m_pGetWarpingRegionOfSize_8x8_Program->setInt("totalLayer", TotalLayer);
+				m_pGetWarpingRegionOfSize_8x8_Program->setInt("curLayer", i);
 			}
 			else
 			{
-				m_pGetWarpingRegionProgram->use();
+				m_pGetWarpingRegionOfSize_16x16_Program->use();
 				m_pTexArray->bind(0);
-				m_pGetWarpingRegionProgram->setInt("totalLayer", TotalLayer);
-				m_pGetWarpingRegionProgram->setInt("curLayer", i);
+				m_pGetWarpingRegionOfSize_16x16_Program->setInt("totalLayer", TotalLayer);
+				m_pGetWarpingRegionOfSize_16x16_Program->setInt("curLayer", i);
 			}
 			glDispatchCompute(m_NumProbe, TexSize, TexSize);
 			glMemoryBarrier(GL_SHADER_STORAGE_BUFFER);
 		}
 
 		m_pWarpingProgram->use();
-		glDispatchCompute(m_NumProbe, 1, 1);
+		glDispatchCompute(m_NumProbe,1, 1);
 		m_pVisualizeWarpingProgram->use();
 		glDispatchCompute(16,16,1);
 

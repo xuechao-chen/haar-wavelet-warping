@@ -18,9 +18,10 @@ layout (std430,binding = 1) buffer WarpingPointStruct
 };
 layout (std430,binding=2) buffer WarpRegionStruct
 {
-	ChildRegion WarpRegion[65536];
+	ChildRegion WarpRegion[87040];
 };
-bool inRegion(vec2 vPoint,ChildRegion vRegion)
+
+bool inRegion(in vec2 vPoint,in ChildRegion vRegion)
 {
 	return (
 		vPoint.x >= vRegion.XMinBorder &&
@@ -30,19 +31,62 @@ bool inRegion(vec2 vPoint,ChildRegion vRegion)
 	);
 }
 
+uint findLocationOfNextMipmap(in vec2 vPoint,in uint vRegionBegin,in uint vRegionGroupOffest,in uint vMipmapSize)
+{
+    uint voRegionOffest;
+	uint RegionEnd=vRegionBegin+vMipmapSize*2;
+	for(uint i=vRegionBegin;i<RegionEnd;i=i+vMipmapSize)
+	{
+		for(uint k=0;k<2;k++)
+		{
+			if(inRegion(vPoint,WarpRegion[i+k]))
+	        {
+				 uint LocalOffest=i+k-vRegionGroupOffest;
+				 voRegionOffest=(LocalOffest/vMipmapSize)*(vMipmapSize*4)+(LocalOffest%vMipmapSize)*2;
+				 i=RegionEnd;
+		         break;
+		    }
+		}
+	}
+	return voRegionOffest;
+}
+
 void main(void)
 {
+//256*256个线程，每个线程最多循环4+4+4+4次
     uint pointIdx = gl_WorkGroupID.x*256+gl_LocalInvocationID.x;
     vec2 WarpingPoint = WarpingPoints[pointIdx];
-	uint GroupBegin = gl_WorkGroupID.x * 256;
-	uint GroupEnd = GroupBegin + 256;
-   for (uint i= GroupBegin; i< GroupEnd; i++)
-   {
-		if(inRegion(WarpingPoint,WarpRegion[i]))
-	    {
-			WarpingPoints[pointIdx].x = WarpRegion[i].XAddCoefficent + WarpRegion[i].XTransformCoefficent * WarpingPoint.x;
-			WarpingPoints[pointIdx].y = WarpRegion[i].YAddCoefficent + WarpRegion[i].YTransformCoefficent * WarpingPoint.y;
-			break;
+	uint RegionOffest=0;
+	uint RegionGroupOffest=gl_WorkGroupID.x * 4;
+	uint RegionBegin =RegionGroupOffest+RegionOffest;
+	uint MipmapSize=2;
+
+	RegionOffest=findLocationOfNextMipmap(WarpingPoint,RegionBegin,RegionGroupOffest,MipmapSize);
+	RegionGroupOffest=1024+gl_WorkGroupID.x * 16;
+	RegionBegin =RegionGroupOffest+RegionOffest;
+	MipmapSize=4;
+
+	RegionOffest=findLocationOfNextMipmap(WarpingPoint,RegionBegin,RegionGroupOffest,MipmapSize);
+	RegionGroupOffest=5120+gl_WorkGroupID.x * 64;
+	RegionBegin =RegionGroupOffest+RegionOffest;
+	MipmapSize=8;
+
+	RegionOffest=findLocationOfNextMipmap(WarpingPoint,RegionBegin,RegionGroupOffest,MipmapSize);
+	RegionGroupOffest=21504+gl_WorkGroupID.x * 256;
+	MipmapSize=16;
+	RegionBegin=RegionGroupOffest+RegionOffest;
+	uint RegionEnd=RegionBegin+MipmapSize*2;
+	for(uint i=RegionBegin;i<RegionEnd;i=i+MipmapSize)
+	{
+		for(uint k=0;k<2;k++)
+		{
+			if(inRegion(WarpingPoint,WarpRegion[i+k]))
+	        {
+		         WarpingPoints[pointIdx].x = WarpRegion[i+k].XAddCoefficent +WarpRegion[i+k].XTransformCoefficent * WarpingPoint.x;
+		         WarpingPoints[pointIdx].y = WarpRegion[i+k].YAddCoefficent +WarpRegion[i+k].YTransformCoefficent * WarpingPoint.y;
+				 i=RegionEnd;
+		         break;
+		    }
 		}
-   }
+	}
 }

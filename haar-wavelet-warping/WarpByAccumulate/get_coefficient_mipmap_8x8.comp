@@ -1,0 +1,131 @@
+#version 430
+layout(local_size_x=1,local_size_y=1,local_size_z=1) in;
+
+struct ChildRegion
+{
+	float XMinBorder;
+	float XMaxBorder;
+	float YMaxBorder;
+	float YMinBorder;
+	float YTransformCoefficent;
+	float YAddCoefficent;
+	float XTransformCoefficent;
+	float XAddCoefficent;
+};
+
+layout (std430,binding=2) buffer WarpRegionStruct
+{
+	ChildRegion WarpRegion[87040];
+};
+ 
+uniform int totalLayer;                      
+uniform int curLayer;
+uniform sampler2DArray haar2DTex;
+
+float __coefficient(in float vA,in float vB,in float vC)
+{
+	return (vA - vB) / (vA - vC);
+}
+
+float grayscale(in vec3 rgb)
+{
+	return 0.3*rgb.r+0.59*rgb.g+0.11*rgb.b;
+}
+ 
+ChildRegion __accumulateY(in ChildRegion vParent,in float vYMinBorder,in float vYMaxborder,in float vSpiltCoordinate)
+{
+	ChildRegion voResult;
+	float Median = (vYMinBorder + vYMaxborder) / 2;
+	float Coefficient = __coefficient(vYMaxborder, Median, vSpiltCoordinate);
+	voResult.YTransformCoefficent = Coefficient * vParent.YTransformCoefficent;
+	voResult.YAddCoefficent = (1 - Coefficient) * vYMaxborder + Coefficient * vParent.YAddCoefficent;
+	voResult.XTransformCoefficent = vParent.XTransformCoefficent;
+	voResult.XAddCoefficent = vParent.XAddCoefficent;
+	return voResult;
+}
+
+ChildRegion __accumulateLeftX(in ChildRegion vParent,in float vXMinBorder,in float vXMaxBorder,in float vYMinBorder,in float vYMaxborder,in float vSpiltCoordinate)
+{
+	ChildRegion voResult;
+	voResult.YTransformCoefficent = vParent.YTransformCoefficent;
+	voResult.YAddCoefficent = vParent.YAddCoefficent;
+	voResult.XMaxBorder = vSpiltCoordinate;
+	voResult.XMinBorder = vXMinBorder;
+	voResult.YMaxBorder = vYMaxborder;
+	voResult.YMinBorder = vYMinBorder;
+	float Median = (vXMinBorder + vXMaxBorder) / 2;
+	float Coefficient = __coefficient(vXMinBorder, Median, vSpiltCoordinate);
+	voResult.XTransformCoefficent = Coefficient * vParent.XTransformCoefficent;
+	voResult.XAddCoefficent = (1 - Coefficient) * vXMinBorder + Coefficient * vParent.XAddCoefficent;
+	return voResult;
+}
+
+ChildRegion __accumulateRightX(in ChildRegion vParent,in float vXMinBorder,in float vXMaxBorder,in float vYMinBorder,in float vYMaxborder,in float vSpiltCoordinate)
+{
+	ChildRegion voResult;
+	voResult.YTransformCoefficent = vParent.YTransformCoefficent;
+	voResult.YAddCoefficent = vParent.YAddCoefficent;
+	voResult.XMaxBorder =vXMinBorder;
+	voResult.XMinBorder =vSpiltCoordinate;
+	voResult.YMaxBorder = vYMaxborder;
+	voResult.YMinBorder = vYMinBorder;
+	float Median = (vXMinBorder + vXMaxBorder) / 2;
+	float Coefficient = __coefficient(vXMinBorder, Median, vSpiltCoordinate);
+	voResult.XTransformCoefficent = Coefficient * vParent.XTransformCoefficent;
+	voResult.XAddCoefficent = (1 - Coefficient) * vXMinBorder + Coefficient * vParent.XAddCoefficent;
+	return voResult;
+}
+
+void main(void)
+{
+	uint RootDataSize=16;
+	uint RootRegionBaseOffest=1024+gl_WorkGroupID.x*RootDataSize;
+	uint LocalOffest=gl_WorkGroupID.y*gl_NumWorkGroups.y+gl_WorkGroupID.z;
+	uint RegionIdx=RootRegionBaseOffest+LocalOffest;
+	ChildRegion Parent=WarpRegion[RegionIdx];
+	float XMinBorder = Parent.XMinBorder;
+	float XMaxBorder = Parent.XMaxBorder;
+	float YMaxBorder = Parent.YMaxBorder;
+	float YMinBorder = Parent.YMinBorder;
+
+	ivec2 finerTexCoordBase = ivec2(gl_WorkGroupID.y, gl_WorkGroupID.z)*2;
+	int layer = totalLayer-curLayer-2;
+	float UpLeftNumber=grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(0,1), gl_WorkGroupID.x), layer).rgb);
+	float UpRightNumber=grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(1,1), gl_WorkGroupID.x), layer).rgb);
+	float DownLeftNumber=grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(0,0), gl_WorkGroupID.x), layer).rgb);
+	float DownRightNumber=grayscale(texelFetch(haar2DTex, ivec3(finerTexCoordBase+ivec2(1,0), gl_WorkGroupID.x), layer).rgb);
+
+	float Sum = UpLeftNumber + UpRightNumber +DownLeftNumber +DownRightNumber;
+	float FrontProbaility = (UpLeftNumber + UpRightNumber) / Sum;
+	float SpiltCoordinate = YMaxBorder - FrontProbaility * (YMaxBorder - YMinBorder);
+	ChildRegion UpResult = __accumulateY(Parent, YMinBorder, YMaxBorder, SpiltCoordinate);
+	ChildRegion DownResult = __accumulateY(Parent, YMaxBorder, YMinBorder, SpiltCoordinate);
+
+	YMinBorder = SpiltCoordinate;
+	Sum = UpLeftNumber + UpRightNumber;
+	FrontProbaility = UpRightNumber / Sum;
+	SpiltCoordinate = XMaxBorder - FrontProbaility * (XMaxBorder - XMinBorder);
+	ChildRegion UpLeftResult = __accumulateLeftX(UpResult, XMinBorder, XMaxBorder, YMinBorder, YMaxBorder, SpiltCoordinate);
+	ChildRegion UpRightResult = __accumulateRightX(UpResult, XMaxBorder, XMinBorder, YMinBorder, YMaxBorder, SpiltCoordinate);
+
+	YMaxBorder = YMinBorder;
+	YMinBorder = Parent.YMinBorder;
+	Sum = DownLeftNumber +DownRightNumber;
+	FrontProbaility = DownRightNumber / Sum;
+	SpiltCoordinate = XMaxBorder - FrontProbaility * (XMaxBorder - XMinBorder);
+	ChildRegion DownLeftResult = __accumulateLeftX(DownResult, XMinBorder, XMaxBorder, YMinBorder, YMaxBorder, SpiltCoordinate);
+	ChildRegion DownRightResult = __accumulateRightX(DownResult, XMaxBorder, XMinBorder, YMinBorder, YMaxBorder, SpiltCoordinate);
+	
+	int CurrentLevelSize=2<<curLayer;
+	int CurrentDataSize=CurrentLevelSize*CurrentLevelSize;
+	int AlreadyFillDataSize=5120;
+	uint DownLeftWarpRegionLocation=AlreadyFillDataSize+gl_WorkGroupID.x*CurrentDataSize+finerTexCoordBase.x*CurrentLevelSize+finerTexCoordBase.y;
+	uint UpLeftWarpRegionLocation=DownLeftWarpRegionLocation+1;
+	uint DownRightWarpRegionLocation=DownLeftWarpRegionLocation+CurrentLevelSize;
+	uint UpRightWarpRegionLocation=DownRightWarpRegionLocation+1;
+
+	WarpRegion[UpLeftWarpRegionLocation]=UpLeftResult;
+	WarpRegion[UpRightWarpRegionLocation]=UpRightResult;
+	WarpRegion[DownLeftWarpRegionLocation]=DownLeftResult;
+	WarpRegion[DownRightWarpRegionLocation]=DownRightResult;
+}
