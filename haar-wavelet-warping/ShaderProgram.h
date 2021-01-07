@@ -26,21 +26,7 @@ protected:
     Shader(const char* path, GLuint type) : m_Type(type)
     {
         std::string Code;
-        std::ifstream ShaderFile;
-        ShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-        try
-        {
-            ShaderFile.open(path);
-            std::stringstream ShaderStream;
-            ShaderStream << ShaderFile.rdbuf();
-            ShaderFile.close();
-            Code = ShaderStream.str();
-        }
-        catch (std::ifstream::failure& e)
-        {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << "\n" << e.what() << std::endl;
-        }
+        readShader(path, Code);
 
         const char* ShaderCode = Code.c_str();
         m_ID = glCreateShader(type);
@@ -61,6 +47,68 @@ private:
             glGetShaderInfoLog(m_ID, 1024, NULL, infoLog);
             std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << shaderType << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
+    }
+    bool readText(std::string path, std::string& out)
+    {
+        std::ifstream ShaderFile;
+        ShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+        try
+        {
+            ShaderFile.open(path);
+            std::stringstream ShaderStream;
+            ShaderStream << ShaderFile.rdbuf();
+            ShaderFile.close();
+            out = ShaderStream.str();
+            return true;
+        }
+        catch (std::ifstream::failure& e)
+        {
+            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << "\n" << e.what() << std::endl;
+            return false;
+        }
+    }
+    //https://diharaw.github.io/blog/dead-simple-shader-include-system/
+    bool readShader(std::string path, std::string& out)
+    {
+        std::string og_source;
+
+        if (!readText(path, og_source))
+            return false;
+
+        std::istringstream stream(og_source);
+        std::string line;
+
+        while (std::getline(stream, line))
+        {
+            if (line.find("#include") != std::string::npos)
+            {
+                size_t start = line.find_first_of("<") + 1;
+                size_t end = line.find_last_of(">");
+                std::string include_path = line.substr(start, end - start);
+                std::string path_to_shader = "";
+                size_t slash_pos = path.find_last_of("/");
+
+                if (slash_pos != std::string::npos) path_to_shader = path.substr(0, slash_pos + 1);
+
+                std::string include_source;
+                if (!readShader(path_to_shader + include_path, include_source))
+                {
+                    std::cout << "Included file <" << include_path << "> cannot be opened!" << std::endl;
+                    return false;
+                }
+                else
+                {
+                    out += include_source + "\n\n";
+                }
+            }
+            else
+            {
+                out += line + "\n";
+            }
+        }
+
+        return true;
     }
 };
 
@@ -97,6 +145,11 @@ public:
     void setFloat(const std::string& name, float value) const
     {
         glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value);
+    }
+
+    void setVec2(const std::string& name, float v1, float v2) const
+    {
+        glUniform2f(glGetUniformLocation(m_ID, name.c_str()), v1, v2);
     }
 
 protected:
